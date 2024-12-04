@@ -6,7 +6,7 @@ namespace day3_corruption
     {
         static readonly Regex regMul = new Regex(@"mul\((?<f1>[0-9]{1,3}),(?<f2>[0-9]{1,3})\)");
         static readonly Regex regDont = new Regex(@"don't\(\)(?<stuff>.*?)do\(\)");
-        static readonly Regex regNever = new Regex(@"don't\(\)(?<stuff>.*?)(?!do\(\))");
+        static readonly Regex regNever = new Regex(@"don't\(\)(?<stuff>((?!do\(\)).)*?)$");
         static void Main(string[] args)
         {
             Console.WriteLine("Hello, World! Problem #3 Here.\n");
