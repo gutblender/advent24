@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "day2_reports", "day2_report
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "day3_corruption", "day3_corruption\day3_corruption.csproj", "{5D712BD4-0611-4433-8E56-81062F0104F1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "day4_xmasWordSearch", "day4_xmasWordSearch\day4_xmasWordSearch.csproj", "{592A8C83-D5AB-4A26-AE3E-4AAB868588BD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{5D712BD4-0611-4433-8E56-81062F0104F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D712BD4-0611-4433-8E56-81062F0104F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D712BD4-0611-4433-8E56-81062F0104F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{592A8C83-D5AB-4A26-AE3E-4AAB868588BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{592A8C83-D5AB-4A26-AE3E-4AAB868588BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{592A8C83-D5AB-4A26-AE3E-4AAB868588BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{592A8C83-D5AB-4A26-AE3E-4AAB868588BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
