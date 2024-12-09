@@ -77,26 +77,27 @@
             {
                 // turn in circles lol
                 int turns = 0;
+                Pt blockage;
                 for (Pt next
                     ; turns < 2 && OkGo(pos, dir) && '#' == MapGet(next = pos.Go(dir))
                     ; dir = TurnRight(dir), turns++)
-                    ; // no body to love
+                    blockage = next; // save where the blockage was
 
                 if (!OkGo(pos, dir))
                     break;
 
                 pos = pos.Go(dir);
+                char dc = GetDirChar(dir);
+
                 switch (MapGet(pos))
                 {
                     case '.':
                         {
-                            map[pos.Y][pos.X] = GetDirChar(dir);
+                            map[pos.Y][pos.X] = dc;
                             cnt++;
                         }
                         break;
 
-                    case '^':
-                    case 'X':
                     default:
                     break;
 
