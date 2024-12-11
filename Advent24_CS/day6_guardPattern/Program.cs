@@ -1,5 +1,6 @@
 ﻿namespace day6_guardPattern
 {
+    using MapType = List<char[]>;
     internal class Program
     {
         static void Main(string[] args)
@@ -7,17 +8,29 @@
             Console.WriteLine("Hello, World! Problem #6 Here.\n");
             Console.WriteLine("Paste your input below, and hit Enter a couple times to input a blank line to trigger processing:\n");
 
-            List<char[]> map = new();
+            void MapCopy(ref MapType dest, MapType src)
+            {
+                if (dest == null)
+                    dest = new();
+
+                dest.Clear();
+                foreach(var line in src)
+                    dest.Add(line.ToArray());
+            }
+
+            MapType map = new(), orig = new(); // back up the map also
             int width = 0;
             Pt? start = null;
-            for (string line; !string.IsNullOrWhiteSpace(line = Console.ReadLine());)
+            for (string? line; !string.IsNullOrWhiteSpace(line = Console.ReadLine());)
             {
-                int i = line.IndexOf('^');
+                int i = line!.IndexOf('^');
                 if (0 <= i)
-                    start = new Pt(i, map.Count);
+                    start = new Pt(i, orig.Count);
 
-                map.Add(line.Trim().ToCharArray());
+                orig.Add(line!.Trim().ToCharArray());
             }
+
+            MapCopy(ref map, orig);
             width = map.First().Length;
 
             char MapGet(Pt pt) => map[pt.Y][pt.X];
@@ -61,7 +74,7 @@
             {
                 switch (dir)
                 {
-                    case Direction.Up: return 'U';
+                    case Direction.Up: return '^'; // this handles the corner case to end up where I started
                     case Direction.Rt: return 'R';
                     case Direction.Dn: return 'D';
                     case Direction.Lf: return 'L';
@@ -69,44 +82,92 @@
                 }
             }
 
-            int cnt = 1; // count the original square
-            Direction dir = Direction.Up;
-            Pt pos = start!.Value;
-
-            for (cnt = 1; ; )
+            uint CountTraversals(Pt start, Direction dir)
             {
-                // turn in circles lol
-                int turns = 0;
-                Pt blockage;
-                for (Pt next
-                    ; turns < 2 && OkGo(pos, dir) && '#' == MapGet(next = pos.Go(dir))
-                    ; dir = TurnRight(dir), turns++)
-                    blockage = next; // save where the blockage was
+                uint cnt = 1; // count the original square
+                //Direction dir = Direction.Up;
+                Pt pos = start; // !.Value;
 
-                if (!OkGo(pos, dir))
-                    break;
-
-                pos = pos.Go(dir);
-                char dc = GetDirChar(dir);
-
-                switch (MapGet(pos))
+                for (cnt = 1; ;)
                 {
-                    case '.':
-                        {
-                            map[pos.Y][pos.X] = dc;
-                            cnt++;
-                        }
+                    // turn in circles lol
+                    int turns = 0;
+                    Pt blockage;
+                    for (Pt next
+                        ; turns < 3 && OkGo(pos, dir) && '#' == MapGet(next = pos.Go(dir))
+                        ; dir = TurnRight(dir), turns++)
+                        blockage = next; // save where the blockage was
+
+                    if (!OkGo(pos, dir))
                         break;
 
-                    default:
-                    break;
+                    char dc = GetDirChar(dir);
+                    pos = pos.Go(dir);
+                    char now = MapGet(pos);
 
-                    case '#':
-                        throw new Exception();
+                    if (dc == now)
+                        return 0xFFFFFFFF; // perfect circle
+
+                    switch (now)
+                    {
+                        default:
+                            if (now == '.')
+                                cnt++; // only count places I ain't been before
+                            map[pos.Y][pos.X] = dc;
+                            break;
+
+                        case '#':
+                        case 'O':
+                            throw new Exception();
+                    }
                 }
+
+                return cnt;
             }
 
+            uint cnt = CountTraversals(start!.Value, Direction.Up);
             Console.WriteLine($"The guard went to {cnt} unique positions!");
+
+            // now start over. 
+            {
+                MapCopy(ref map, orig);
+
+                Direction dir = Direction.Up;
+                Pt pos = start!.Value;
+
+                uint nb = 0;
+                for (; ; )
+                {
+                    // turn in circles lol, but not really, <= 3 turns
+                    int turns = 0;
+                    Pt next = pos.Go(dir);
+                    for (
+                        ; turns < 3 && OkGo(pos, dir) && '#' == MapGet(next)
+                        ; dir = TurnRight(dir), next = pos.Go(dir), turns++)
+                        ; // nothing to do
+
+                    if (!OkGo(pos, dir)) // going off the map
+                        break; // done at last
+
+                    char dc = GetDirChar(dir);
+                    orig[pos.Y][pos.X] = dc; // mark my direction
+
+                    if ('.' == orig[next.Y][next.X])
+                    { 
+                        // ONLY if the guard hasn't been here before. We can't put one down "behind" him.
+
+                        MapCopy(ref map, orig); // clean it up for analysis
+                        // now what if this were a blockage tho??
+                        map[next.Y][next.X] = '#';
+                        if (0xFFFFFFFF == CountTraversals(pos, dir))
+                            nb++;
+                    }
+
+                    pos = next;
+                }
+                Console.WriteLine($"I could find {nb} unique positions for a blockage!");
+            }
+
         }
 
         static Direction TurnRight(Direction dir)
