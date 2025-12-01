@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "day9_diskfrag", "day9_diskf
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "day25_keys", "day25_keys\day25_keys.csproj", "{7F0C279A-7E8D-4B7F-8030-88874DD866BE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "day24_logicgates", "day24_logicgates\day24_logicgates.csproj", "{72A19F1F-B025-4A8C-B515-63FDAB50A10C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{7F0C279A-7E8D-4B7F-8030-88874DD866BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F0C279A-7E8D-4B7F-8030-88874DD866BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F0C279A-7E8D-4B7F-8030-88874DD866BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72A19F1F-B025-4A8C-B515-63FDAB50A10C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72A19F1F-B025-4A8C-B515-63FDAB50A10C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72A19F1F-B025-4A8C-B515-63FDAB50A10C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72A19F1F-B025-4A8C-B515-63FDAB50A10C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
