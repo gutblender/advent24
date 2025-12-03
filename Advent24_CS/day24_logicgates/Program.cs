@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace day24_logicgates;
 
@@ -23,7 +21,7 @@ internal class Program
         Dictionary<string, bool> signals = [];
         List<Equation> equations = [];
 
-        for (string line;
+        for (string? line;
             !string.IsNullOrWhiteSpace(line = Console.ReadLine());)
         {
             var matchWire = RegWireStatus.Match(line);
@@ -59,45 +57,178 @@ internal class Program
             equations.Add(eqn);
         }
 
+        // add up z - Part 1
+        ulong z = Solve(equations, signals);
+
+        Console.WriteLine($"Part 1 z: {z}");
+
         // there exist equation pairs which are useless to attempt swapping
         // because their two outputs never appear uniquely
         // meaning they ONLY appear in equations together as inputs,
         // so swapping them does nothing.
         // be sure to double-reference them for easy lookups, i.e. dict[A] = B and dict[B] = A.
         // TBH, this sounds pretty stringent so maybe I'll skip this step and leave this empty.
-        //Dictionary<Equation, Equation> ForbiddenSwaps = [];
+        Dictionary<Equation, Equation> ForbiddenSwaps = [];
 
-        //ulong x = BuildNum(signals, bit => $"x{bit:D2}");
-        //ulong y = BuildNum(signals, bit => $"y{bit:D2}");
-        //ulong ShouldZ = x + y;
+        Func<int, string> GetXWireName = bit => $"x{bit:D2}";
+        Func<int, string> GetYWireName = bit => $"y{bit:D2}";
+        //Func<int, string> GetZWireName = bit => $"z{bit:D2}";
+        ulong x = BuildNum(signals, GetXWireName);
+        ulong y = BuildNum(signals, GetYWireName);
+        ulong ShouldZ = x + y;
 
-        //const int NumSwaps = 4;
+        // solution part 2 data structures
+        const int NumSwaps = 4;
         //HashSet<Equation> SwappingEqns = [];
-        //Tuple<int, int>[] Swaps = new Tuple<int, int>[NumSwaps];
-        //int swap;
-        //for (swap = 0; swap < 4; swap++) // init
-        //{
-        //    int left = 2 * swap, right = left + 1;
-        //    Swaps[swap] = Tuple.Create(2 * swap, 2 * swap + 1);
-        //    Equation eLeft = equations[left];
-        //    Equation eRight = equations[right];
-        //    eLeft.Swap(eRight);
-        //    SwappingEqns.Add(eLeft);
-        //    SwappingEqns.Add(eRight);
-        //}
+        Swap[] Swaps = new Swap[NumSwaps];
 
-        //swap = NumSwaps - 1; // start at the end
-        //for (bool solved = false; !solved; )
-        //{
-        //    // try this solution. 
+        // solution part 2 tools which act upon the data structures
+        int FindFirstAvailableEquationNotSwapped(int startIndex = 0)
+        {
+            for (int i = startIndex; i < equations.Count; i++)
+            {
+                Equation eqn = equations[i];
+                if (!eqn.IsSwapped) //SwappingEqns.Contains(eqn))
+                    return i;
+            }
+            return -1;
+        }
+        void BreakSwap(int swapIndex)
+        {
+            var swap = Swaps[swapIndex];
+            Equation eLeft = equations[swap.Left];
+            Equation eRight = equations[swap.Right];
+            eLeft.SwapNone();
+            eRight.SwapNone();
+            //SwappingEqns.Remove(eLeft);
+            //SwappingEqns.Remove(eRight);
+        }
+        void MakeSwap(int swapIndex)
+        {
+            var swap = Swaps[swapIndex];
+            Equation eLeft = equations[swap.Left];
+            Equation eRight = equations[swap.Right];
+            eLeft.Swap(eRight);
+            //SwappingEqns.Add(eLeft);
+            //SwappingEqns.Add(eRight);
+        }
 
-        //    // setup for next solution.
-        //}
+        // Solution Part 2
+        int swap;
+        for (swap = 0; swap < 4; swap++) // init swaps
+        {
+            int left = 2 * swap, right = left + 1;
+            Swaps[swap] = new() { Left = left, Right = right };
+            MakeSwap(swap);
+        }
 
-        // add up z
-        ulong z = Solve(equations, signals);
+        List<Swap[]> solutions = [];
 
-        Console.WriteLine($"Part 1 z value: {z}");
+        var rand = new Random();
+        for (bool ok = true; ok;)
+        {
+            // try this solution.
+            if (ShouldZ == Solve(equations, signals, ShouldZ))
+            { // found a solution!
+                // simply select outputs, swapped or not doesn't matter, and sort them.
+                solutions.Add(Swaps.ToArray()); // these should copy by value.
+            }
+
+            // setup for next solution:
+            // as this loop continues, it must break increasingly leftward swap relationships
+            // to make room for those right. 
+            // it will typically stay right as long as it can remake a new swap there. 
+            // always start at the end - first swap to "increment"
+            for (swap = NumSwaps - 1; swap >= 0; swap--)
+            {
+                BreakSwap(swap); // break relationships
+
+                int next;
+                if (0 <= (next = FindFirstAvailableEquationNotSwapped(Swaps[swap].Right + 1)))
+                { // move the right.
+                    Swaps[swap].Right = next;
+                    break; // this swap is now complete, next loop will remake this and all following swaps.
+                }
+                else if (0 <= (next = FindFirstAvailableEquationNotSwapped(Swaps[swap].Left + 1)))
+                { // overflow, have to move the left up
+                    Swaps[swap].Left = next;
+                    // now find a new right.
+                    int newRight;
+                    if (0 <= (newRight = FindFirstAvailableEquationNotSwapped(Swaps[swap].Left + 1)))
+                    {
+                        Swaps[swap].Right = newRight;
+                        break; // this swap is now complete, next loop will remake this and all following swaps.
+                    }
+                }
+
+                // 
+            }
+            if (swap < 0)
+                break; // all combinations exhausted. the set should be empty.
+
+            // where the break-swap loop left off, that swap is good just needs to be remade.
+            MakeSwap(swap);
+
+            // now rebuild after this swap index.
+            // never go left of your leftmost set swap.
+            for (int floor = Swaps[swap].Left + 1; ok && ++swap < NumSwaps;)
+            {
+                int left = FindFirstAvailableEquationNotSwapped(floor);
+                if (left < 0) 
+                    break; // no more equations to swap.
+                int right = FindFirstAvailableEquationNotSwapped(left + 1);
+                if (right < 0) 
+                    break; // no more equations to swap.
+
+                Swaps[swap].Left = left;
+                Swaps[swap].Right = right;
+                MakeSwap(swap);
+
+                floor = right + 1;
+            }
+            if (swap < NumSwaps)
+                break; // ran out of swaps. The set will be incomplete.
+        }
+
+        for (List<Swap[]> remove = []; solutions.Count > 1; remove.Clear())
+        {
+            // come up with new random x + y = z. TODO mask off x & y programmatically according to # bits given...
+            // the system just doesn't have enough logic wires to handle bits above those.
+            x = (ulong)rand.NextInt64() & ((1UL << 45) - 1);
+            y = (ulong)rand.NextInt64() & ((1UL << 45) - 1);
+            ShouldZ = x + y;
+
+            // rebuild signals for new x and y.
+            signals.Clear();
+            BuildWires(x, signals, GetXWireName);
+            BuildWires(y, signals, GetYWireName);
+
+            foreach (var soln in solutions)
+            {
+                // clear all swaps.
+                foreach (var eqn in equations)
+                    eqn.SwapNone();
+
+                // make all the swaps
+                Swaps = soln;
+                for (int i = 0; i < Swaps.Length; i++)
+                    MakeSwap(i);
+                if (ShouldZ != Solve(equations, signals, ShouldZ))
+                    remove.Add(soln); // you suck
+            }
+            foreach (var rem in remove)
+                solutions.Remove(rem);
+        }
+
+        string readout = string.Join("\n\t", solutions.Select(soln => string.Join(',', soln)));
+        Console.WriteLine($"Part 2 solutions:\n\t{readout}");
+    }
+
+    struct Swap
+    { 
+        public int Left, Right; 
+        public Swap() { Clear(); }
+        public void Clear() { Left = -1; Right = -1; }
     }
 
     static ulong BuildNum(Dictionary<string, bool> wires, Func<int, string> GetWireName)
@@ -110,6 +241,14 @@ internal class Program
                 z |= 1UL << bit;
         }
         return z;
+    }
+    static void BuildWires(ulong num, Dictionary<string, bool> wires, Func<int, string> GetWireName)
+    {
+        for (int bit = 0; bit < 8 * sizeof(ulong); bit++, num >>= 1)
+        {
+            string wireName = GetWireName(bit);
+            wires[wireName] = (num & 1UL) != 0;
+        }
     }
 
     static ulong Solve(IReadOnlyList<Equation> equations, IReadOnlyDictionary<string, bool> sigs
@@ -148,6 +287,8 @@ internal class Program
 
                 }
             }
+            if (0 >= toRemove.Count)
+                return expected.HasValue ? expected.Value : 0; // circular!
             foreach (var rem in toRemove)
                 eqns.Remove(rem);
         }
@@ -165,6 +306,7 @@ class Equation(string a, string b, Operators op, string output)
     public readonly Operators Operator = op;
     public bool HasInput(string input) => A == input || B == input;
 
+    public bool IsSwapped => swap is not null;
     private Equation? swap = null;
     public string Output => swap?.myout ?? myout;
     public void SwapNone() => Swap(null);
