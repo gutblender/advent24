@@ -19,7 +19,6 @@ internal class Program
 
         Dictionary<string, bool> signals = [];
         List<Equation> equations = [];
-        Dictionary<string, Equation> LookupEqnByInput = [];
 
         for (string line;
             !string.IsNullOrWhiteSpace(line = Console.ReadLine());)
@@ -55,8 +54,6 @@ internal class Program
                 matchEqn.Groups["output"].Value
             );
             equations.Add(eqn);
-            LookupEqnByInput[eqn.A] = eqn;
-            LookupEqnByInput[eqn.B] = eqn;
         }
 
         // "eat" equations
